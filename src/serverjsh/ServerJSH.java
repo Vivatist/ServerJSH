@@ -2,26 +2,24 @@ package serverjsh;
 
 import java.net.*;
 
-class ServerJSH {
+class ServerJSH implements Runnable {
 
-    static String commandStr;
+//    public class NetworkPackage {
+//
+//        int UIN;
+//        int responseToUIN;
+//    }
+    Thread t;
+    int serverPort = 7777;
 
-    public class NetworkPackage  {
-
-        int UIN;
-        int responseToUIN;
-        String data;
-    }
-
-    public static void main(String args[]) {
-
+    public void run() {
         try {
             int i = 0; // счётчик подключений
 
             // привинтить сокет на локалхост, порт 3128
-            ServerSocket server = new ServerSocket(7777);
+            ServerSocket server = new ServerSocket(serverPort);
 
-            System.out.println("server is started");
+            System.out.println("Thread of accepting connect is started");
 
             // слушаем порт
             while (true) {
@@ -31,11 +29,32 @@ class ServerJSH {
                 new NewConnectThread(i, server.accept());
 
                 i++;
-
             }
         } catch (Exception e) {
             System.out.println("init error: " + e);
         } // вывод исключений
+    }
+
+    public static void main(String args[]) {
+
+        System.out.println("/n---------Server JSH is started----------");
+
+        //Запускаем поток ожидающий запросы от клиентов
+        Thread t = new Thread(new ServerJSH());
+        t.start();
+
+        //Главный цикл
+        while (true) {
+
+            System.out.println("Loop");
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+
+            }
+        }
+
     }
 
 }
