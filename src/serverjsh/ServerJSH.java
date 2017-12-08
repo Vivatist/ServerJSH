@@ -6,50 +6,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-class ServeOneJabber extends Thread {
-
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
-
-    public ServeOneJabber(Socket s) throws IOException {
-        socket = s;
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        // Включаем автоматическое выталкивание:
-        out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
-                .getOutputStream())), true);
-        // Если любой из вышеприведенных вызовов приведет к
-        // возникновению исключения, то вызывающий отвечает за
-        // закрытие сокета. В противном случае, нить
-        // закроет его.
-
-        this.start();// вызываем run()
-    }
-
-    public void run() {
-        try {
-            System.out.println("Start thread");
-            while (true) {
-                String str = in.readLine();
-                if (str.equals("END")) {
-                    break;
-                }
-                System.out.println("Echoing: " + str);
-                out.println(str);
-            }
-            System.out.println("closing...");
-        } catch (IOException e) {
-            System.err.println("IO Exception");
-        } finally {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.err.println("Socket not closed");
-            }
-        }
-    }
-}
-
 class ServerJSH implements Runnable {
 
 //    public class NetworkPackage {
@@ -79,7 +35,7 @@ class ServerJSH implements Runnable {
                 //new SessionThread(i, server.accept());
                 Socket socket = server.accept();
                 try {
-                    new ServeOneJabber(socket);
+                    new SessionThread(socket);
                 } catch (IOException e) {
                     // Если завершится неудачей, закрывается сокет,
                     // в противном случае, нить закроет его:
@@ -107,20 +63,17 @@ class ServerJSH implements Runnable {
 
             for (UUID key : SessionThread.networkPackageList.keySet()) {
                 String _strRequest = SessionThread.networkPackageList.get(key).getClientRequest();
-                System.out.println("ID = " + key + ", Client request = " + _strRequest);
-                SessionThread.networkPackageList.get(key).setServerResponse("Testing server response: " + _strRequest);
+                SessionThread.networkPackageList.get(key).setServerResponse(_strRequest);
             }
+            
+            
             System.out.println(date + " map:" + SessionThread.networkPackageList.size() + " s:" + i + "~~~~~~~~~~~~~~~~~~~~~~~~~END~~~~~~~~~~~~~~~~~~~~~~~");
+            try {
+                Thread.sleep((int) (Math.random() * 100));
+            } catch (InterruptedException e) {
 
-            for (int i = 0; i < 100_000_000; i++) {
-                //Дуроной цикл! удалить
             }
-//            try {
-//                Thread.sleep(2000);
-//            } catch (InterruptedException e) {
-
         }
-
     }
 
 }
