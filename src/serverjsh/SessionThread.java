@@ -3,7 +3,6 @@ package serverjsh;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 class SessionThread extends Thread {
@@ -37,16 +36,17 @@ class SessionThread extends Thread {
                 if (str.equals("END")) {
                     break;
                 }
-
+                
+                
                 //Обрабатываем принятую строку
                 NetworkPackage np = new NetworkPackage(str);
                 UUID key = UUID.randomUUID();
-
+                
                 //добавляем пакет с запросом в общий лист запросов
                 networkPackageList.put(key, np);
-               
+
+                    
                 NetworkPackage TMPnp;
-                
                 boolean _flag = false;
                 do {
                     TMPnp = networkPackageList.get(key);
@@ -55,10 +55,10 @@ class SessionThread extends Thread {
                     }
 
                 } while (!_flag);
-
-                //удаляем пакет из общего списка
-                networkPackageList.remove(key);
-
+                synchronized (networkPackageList) {
+                    //удаляем пакет из общего списка
+                    networkPackageList.remove(key);
+                }
                 str = TMPnp.getClientRequest() + "->" + TMPnp.getServerResponse();
 
                 System.out.println("Echoing: " + str);
@@ -76,4 +76,3 @@ class SessionThread extends Thread {
         }
     }
 }
-
