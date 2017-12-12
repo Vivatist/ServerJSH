@@ -1,17 +1,17 @@
-package serverjsh;
+package serverjsh.Network;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-class SessionThread extends Thread {
+public class SessionThread extends Thread {
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
     //общая для всех потоков карта Запрос-Ответ
-    public static Map<UUID, NetworkPackage> networkPackageList = new ConcurrentHashMap();
+    public static Map <UUID, NetworkPackage> networkPackageList = new ConcurrentHashMap();
     private final Date timeOfStartSession = new Date();
 
     public SessionThread(Socket s) throws IOException {
@@ -36,16 +36,17 @@ class SessionThread extends Thread {
                 if (str.equals("END")) {
                     break;
                 }
-                
-                
+
                 //Обрабатываем принятую строку
                 NetworkPackage np = new NetworkPackage(str);
                 UUID key = UUID.randomUUID();
-                
+
                 //добавляем пакет с запросом в общий лист запросов
                 networkPackageList.put(key, np);
+                
+System.out.println(networkPackageList.get(key).getClientRequest());
+System.out.println(networkPackageList.size());
 
-                    
                 NetworkPackage TMPnp;
                 boolean _flag = false;
                 do {
@@ -53,14 +54,13 @@ class SessionThread extends Thread {
                     if (TMPnp.getServerResponse() != null) {
                         _flag = true;
                     }
-
                 } while (!_flag);
+                
+                str = TMPnp.getClientRequest() + "->" + TMPnp.getServerResponse();
                 synchronized (networkPackageList) {
                     //удаляем пакет из общего списка
                     networkPackageList.remove(key);
                 }
-                str = TMPnp.getClientRequest() + "->" + TMPnp.getServerResponse();
-
                 System.out.println("Echoing: " + str);
                 out.println(str);
             }

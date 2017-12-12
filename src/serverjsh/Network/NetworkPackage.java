@@ -1,4 +1,4 @@
-package serverjsh;
+package serverjsh.Network;
 
 import java.util.Date;
 
@@ -6,7 +6,7 @@ import java.util.Date;
  *
  * @author Andrey
  */
-class NetworkPackage {
+public class NetworkPackage {
     
     private String clientRequest = null;
     private String serverResponse = null;
