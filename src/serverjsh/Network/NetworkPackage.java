@@ -1,6 +1,7 @@
 package serverjsh.Network;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  *
@@ -8,16 +9,18 @@ import java.util.Date;
  */
 public class NetworkPackage {
     
+    public final UUID key = UUID.randomUUID();
     private String clientRequest = null;
     private String serverResponse = null;
     final Date timeOfRequest = new Date();
-    Date timeOfResponse = null;
+    Date timeOfLife = null;
     
     public NetworkPackage(String clientRequest) {
         if (clientRequest == null) {
             clientRequest = "Error: string is NULL";
         }
         this.clientRequest = clientRequest;
+        this.timeOfLife = new Date();
     }
     
     public Date getTimeOfRequest() {
@@ -25,12 +28,11 @@ public class NetworkPackage {
     }
     
     public Date getTimeOfResponse() {
-        return timeOfResponse;
+        return timeOfLife;
     }
     
     public void setServerResponse(String serverResponse) {
         this.serverResponse = serverResponse;
-        this.timeOfResponse = new Date();
     }
 
     public String getClientRequest() {

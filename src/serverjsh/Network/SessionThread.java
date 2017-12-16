@@ -2,6 +2,7 @@ package serverjsh.Network;
 
 import java.io.*;
 import java.net.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,9 +11,18 @@ public class SessionThread extends Thread {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-    //общая для всех потоков карта Запрос-Ответ
-    public static Map <UUID, NetworkPackage> networkPackageList = new ConcurrentHashMap();
-    private final Date timeOfStartSession = new Date();
+    //общая для всех потоков очередь Запросов
+    public static Map<UUID, NetworkPackage> responseQueue = new ConcurrentHashMap();
+    //общая для всех запросов очередь Ответов
+    public static Map<UUID, NetworkPackage> requestQueue = new ConcurrentHashMap();
+    public static int numERRORS = 0; //счетчик ошибок
+    public static int numConnections = 0; // счётчик подключений
+    public static int bites = 0; // скорость обмена (байт в секунду)
+    
+    
+
+
+  
 
     public SessionThread(Socket s) throws IOException {
         socket = s;
@@ -24,8 +34,38 @@ public class SessionThread extends Thread {
         // возникновению исключения, то вызывающий отвечает за
         // закрытие сокета. В противном случае, нить
         // закроет его.
-
+        
+        numConnections++;
+        
+        //запускаем таймер для подсчета скорости обмена
+       
+        
         this.start();// вызываем run()
+
+    }
+
+    
+    
+    public static NetworkPackage getRequest() {
+        // вынимаем из очереди запросов первый элемент и возвращаем его, удаляя из очереди
+        if (requestQueue.size() > 0) {
+            Iterator<Map.Entry<UUID, NetworkPackage>> entries = requestQueue.entrySet().iterator();
+            Map.Entry<UUID, NetworkPackage> entry = entries.next();
+            NetworkPackage np = entry.getValue();
+            requestQueue.remove(np.key);
+            return np;
+        } else {
+            return null;
+        }
+    }
+
+    
+    
+    public static void setResponse(NetworkPackage np) {
+        //вставляем в очередь ответов новый ответ сервера
+        synchronized (responseQueue) {
+            responseQueue.put(np.key, np);
+        }
     }
 
     @Override
@@ -33,44 +73,45 @@ public class SessionThread extends Thread {
         try {
             while (true) {
                 String str = in.readLine();
+                bites = bites + str.length();
+                
                 if (str.equals("END")) {
                     break;
                 }
 
                 //Обрабатываем принятую строку
                 NetworkPackage np = new NetworkPackage(str);
-                UUID key = UUID.randomUUID();
+                UUID key = np.key;
 
-                //добавляем пакет с запросом в общий лист запросов
-                networkPackageList.put(key, np);
-                
-System.out.println(networkPackageList.get(key).getClientRequest());
-System.out.println(networkPackageList.size());
+                //добавляем новый запрос в очередь запросов
+                synchronized (requestQueue) {
+                    //добавляем пакет с запросом в общий лист запросов
+                    requestQueue.put(key, np);
+                }
 
-                NetworkPackage TMPnp;
                 boolean _flag = false;
                 do {
-                    TMPnp = networkPackageList.get(key);
-                    if (TMPnp.getServerResponse() != null) {
+                    if (responseQueue.get(key) != null) {
+                        np = responseQueue.get(key);
+                        responseQueue.remove(key);
                         _flag = true;
                     }
                 } while (!_flag);
-                
-                str = TMPnp.getClientRequest() + "->" + TMPnp.getServerResponse();
-                synchronized (networkPackageList) {
-                    //удаляем пакет из общего списка
-                    networkPackageList.remove(key);
-                }
+
+                str = np.getClientRequest() + "->" + np.getServerResponse();
                 System.out.println("Echoing: " + str);
+                bites = bites + str.length();
                 out.println(str);
             }
             System.out.println("closing...");
         } catch (Exception e) {
-            System.err.println("IO Exception");
+            numERRORS++;
+            System.err.println("IO Exception " + e);
         } finally {
             try {
                 socket.close();
             } catch (IOException e) {
+                numERRORS++;
                 System.err.println("Socket not closed");
             }
         }
