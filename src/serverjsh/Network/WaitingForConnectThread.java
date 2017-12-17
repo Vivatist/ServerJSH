@@ -13,7 +13,11 @@ import java.net.Socket;
 public class WaitingForConnectThread implements Runnable{
     
     int i = 0;
-    int serverPort = 7777;
+    int PORT;
+
+   public WaitingForConnectThread(int PORT){
+        this.PORT = PORT;
+    }
     
     @Override
     public void run() {
@@ -21,7 +25,7 @@ public class WaitingForConnectThread implements Runnable{
         try {
 
             // привинтить сокет на локалхост, порт 3128
-            ServerSocket server = new ServerSocket(serverPort);
+            ServerSocket server = new ServerSocket(PORT);
 
             System.out.println("Thread of accepting connect is started");
 
