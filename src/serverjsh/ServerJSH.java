@@ -1,9 +1,6 @@
 package serverjsh;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import serverjsh.Network.*;
@@ -15,7 +12,8 @@ class ServerJSH {
     private static int DELAY_LOOP;
 
     private static int previousBites = 0;
-    private static java.util.Timer myTimer = new java.util.Timer();
+
+    private static Timer myTimer = new Timer();
 
     // Загрузка сохраненных настроек
     private static void LoadSettings(String _settingsFilename) {
@@ -72,7 +70,7 @@ class ServerJSH {
 
 
     public static void main(String args[]) throws InterruptedException {
-        System.out.println("/n---------Server JSH is started----------");
+        System.out.println("\n---------Server JSH is started----------");
 
         String settingsFilename = "ServerJSH.ini";
         System.out.println("Settings file: " + settingsFilename);
@@ -83,6 +81,9 @@ class ServerJSH {
         //Запускаем поток ожидающий запросы от клиентов
         Thread t = new Thread(new WaitingForConnectThread(PORT));
         t.start();
+
+        new CommandManager.CommandProcessor().doCommand(new CommandManager.viewconnect(true));
+        new CommandManager.CommandProcessor().doCommand(new CommandManager.help());
 
 //------------------------------------------------------------------------------
 //                          Г Л А В Н Ы Й  Ц И К Л

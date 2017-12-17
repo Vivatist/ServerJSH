@@ -1,8 +1,9 @@
 package serverjsh.Network;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.*;
 import java.net.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,6 +47,7 @@ public class SessionThread extends Thread {
 
     
     
+    @Nullable
     public static NetworkPackage getRequest() {
         // вынимаем из очереди запросов первый элемент и возвращаем его, удаляя из очереди
         if (requestQueue.size() > 0) {
