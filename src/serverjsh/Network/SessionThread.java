@@ -100,13 +100,16 @@ public class SessionThread extends Thread {
                     }
                 } while (!_flag);
 
-                str = np.getClientRequest() + "->" + np.getServerResponse();
-                System.out.println("Echoing: " + str);
-                bites = bites + str.length();
-                out.println(str);
+          //      str = np.getClientRequest() + "->" + np.getServerResponse();
+          //      System.out.println("Echoing: " + str);
+                bites = bites + np.getServerResponse().length();
+                out.println(np.getServerResponse());
             }
             System.out.println("closing...");
-        } catch (Exception e) {
+        }catch (SocketException e){
+            System.out.println("Connection reset");
+        }
+        catch (Exception e) {
             numERRORS++;
             System.err.println("IO Exception " + e);
         } finally {
