@@ -1,5 +1,6 @@
 package serverjsh.Network;
 
+import com.google.gson.JsonSyntaxException;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -13,19 +14,15 @@ public class SessionThread extends Thread {
     private BufferedReader in;
     private PrintWriter out;
     //общая для всех потоков очередь Запросов
-    public static Map<UUID, NetworkPackage> responseQueue = new ConcurrentHashMap();
+    public static Map<String, NetworkMessage> responseQueue = new ConcurrentHashMap();
     //общая для всех запросов очередь Ответов
-    public static Map<UUID, NetworkPackage> requestQueue = new ConcurrentHashMap();
+    public static Map<String, NetworkMessage> requestQueue = new ConcurrentHashMap();
     public static int numERRORS = 0; //счетчик ошибок
     public static int numConnections = 0; // счётчик подключений
     public static int bites = 0; // скорость обмена (байт в секунду)
-    
-    
 
 
-  
-
-    public SessionThread(Socket s) throws IOException {
+    SessionThread(Socket s) throws IOException {
         socket = s;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         // Включаем автоматическое выталкивание:
@@ -35,81 +32,87 @@ public class SessionThread extends Thread {
         // возникновению исключения, то вызывающий отвечает за
         // закрытие сокета. В противном случае, нить
         // закроет его.
-        
+
         numConnections++;
-        
+
         //запускаем таймер для подсчета скорости обмена
-       
-        
+
+
         this.start();// вызываем run()
 
     }
 
-    
-    
+
     @Nullable
-    public static NetworkPackage getRequest() {
+    public static NetworkMessage getRequest() {
         // вынимаем из очереди запросов первый элемент и возвращаем его, удаляя из очереди
         if (requestQueue.size() > 0) {
-            Iterator<Map.Entry<UUID, NetworkPackage>> entries = requestQueue.entrySet().iterator();
-            Map.Entry<UUID, NetworkPackage> entry = entries.next();
-            NetworkPackage np = entry.getValue();
-            requestQueue.remove(np.key);
-            return np;
+            Iterator<Map.Entry<String, NetworkMessage>> entries = requestQueue.entrySet().iterator();
+            Map.Entry<String, NetworkMessage> entry = entries.next();
+            NetworkMessage nm = entry.getValue();
+            requestQueue.remove(nm.getId());
+            return nm;
         } else {
             return null;
         }
     }
 
-    
-    
-    public static void setResponse(NetworkPackage np) {
+
+    public static void setResponse(NetworkMessage nm) {
         //вставляем в очередь ответов новый ответ сервера
         synchronized (responseQueue) {
-            responseQueue.put(np.key, np);
+            responseQueue.put(nm.getId(), nm);
         }
     }
 
     @Override
     public void run() {
+        String jsonText = "";
         try {
             while (true) {
-                String str = in.readLine();
-                bites = bites + str.length();
-                
-                if (str.equals("END")) {
+                jsonText = in.readLine();
+                bites = bites + jsonText.length();
+
+                if (jsonText.equals("END")) {
                     break;
                 }
 
                 //Обрабатываем принятую строку
-                NetworkPackage np = new NetworkPackage(str);
-                UUID key = np.key;
+                NetworkMessage nm = new NetworkMessage(jsonText);
+                String id = nm.getId();
+
+
 
                 //добавляем новый запрос в очередь запросов
                 synchronized (requestQueue) {
                     //добавляем пакет с запросом в общий лист запросов
-                    requestQueue.put(key, np);
+                    requestQueue.put(id, nm);
                 }
 
                 boolean _flag = false;
                 do {
-                    if (responseQueue.get(key) != null) {
-                        np = responseQueue.get(key);
-                        responseQueue.remove(key);
+                    if (responseQueue.get(id) != null) {
+                        nm = responseQueue.get(id);
+                        responseQueue.remove(id);
                         _flag = true;
                     }
                 } while (!_flag);
 
-          //      str = np.getClientRequest() + "->" + np.getServerResponse();
-          //      System.out.println("Echoing: " + str);
-                bites = bites + np.getServerResponse().length();
-                out.println(np.getServerResponse());
+                //      str = np.getClientRequest() + "->" + np.getServerResponse();
+                //      System.out.println("Echoing: " + str);
+                bites = bites + nm.toJSON().length();
+                out.println(nm.toJSON());
             }
             System.out.println("closing...");
-        }catch (SocketException e){
-            System.out.println("Connection reset");
         }
-        catch (Exception e) {
+
+        catch (JsonSyntaxException e ){
+            System.err.println("IO Exception " + e);
+            System.err.println(jsonText);
+
+        }catch (SocketException e) {
+            System.out.println("Connection reset");
+        } catch (Exception e) {
             numERRORS++;
             System.err.println("IO Exception " + e);
         } finally {

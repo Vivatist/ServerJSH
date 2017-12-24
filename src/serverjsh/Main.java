@@ -102,19 +102,20 @@ class Main {
 
         while (true) {
 
-            NetworkPackage networkPackage = SessionThread.getRequest();
+            NetworkMessage networkMessage = SessionThread.getRequest();
 
-            if (networkPackage != null) {
+            if (networkMessage != null) {
                 try {
-                    CommandPackage commandPackage = new CommandPackage(networkPackage.getClientRequest());
+                    CommandPackage commandPackage = new CommandPackage(networkMessage.getText());
                     String responseToTheRequest = commandManager.PerformAction(commandPackage);
-                    networkPackage.setServerResponse(responseToTheRequest);
+                    networkMessage.setText(responseToTheRequest);
                     //System.out.println(responseToTheRequest);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    networkPackage.setServerResponse(e.getMessage());
+                    networkMessage.setError(true);
+                    networkMessage.setText(e.getMessage());
                 }
-                SessionThread.setResponse(networkPackage);
+                SessionThread.setResponse(networkMessage);
             }
             Thread.sleep(DELAY_LOOP);
         }
