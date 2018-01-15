@@ -1,6 +1,6 @@
 package serverjsh.Errors;
 
-public class MyExceptionOfCommandPackage extends Exception {
+public class MyExceptionOfNetworkMessage extends Exception {
 
     private int number;
     private String message;
@@ -13,7 +13,7 @@ public class MyExceptionOfCommandPackage extends Exception {
 
     public int getNumber(){return number;}
 
-    public MyExceptionOfCommandPackage(String message, int num){
+    public MyExceptionOfNetworkMessage(String message, int num){
 
         super(message);
         this.number=num;

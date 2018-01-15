@@ -1,6 +1,7 @@
 package serverjsh.Commands;
 
 import serverjsh.Errors.MyExceptionBadCommand;
+import serverjsh.Network.NetworkMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,19 +12,21 @@ public class CommandManager {
 
     public CommandManager() {
         commandMap.put("info", new InfoCommand());
-        commandMap.put("tv", new TvCommand());
+        commandMap.put("sql", new SqlCommand());
         commandMap.put("help", new HelpCommand());
+        commandMap.put("test", new TestCommand());
     }
 
-    public String PerformAction(CommandPackage cp) throws Exception {
 
-        String command = cp.getCommand();
+    public String PerformAction(NetworkMessage nm) throws Exception {
+
+        String command = nm.getCommand();
         if (commandMap.containsKey(command)) {
             ICommand cmd = commandMap.get(command);
-            return cmd.Execute(cp);
+            return cmd.Execute(nm);
 
         } else
-            throw new MyExceptionBadCommand("ERROR: Invalid command: " + cp.getCommand(), 0);
+            throw new MyExceptionBadCommand("ERROR: Invalid command: " + nm.getCommand(), 0);
     }
 
 

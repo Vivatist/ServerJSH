@@ -33,8 +33,7 @@ public class WaitingForConnectThread implements Runnable{
             while (true) {
 
                 // ждём нового подключения, после чего запускаем обработку клиента
-                // в новый вычислительный поток и увеличиваем счётчик на единичку
-                //new SessionThread(i, server.accept());
+                // в новый вычислительный поток и увеличиваем счётчик на единицу
                 Socket socket = server.accept();
                 try {
                     new SessionThread(socket);

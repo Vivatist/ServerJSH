@@ -8,6 +8,12 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+/**
+ * Класс, объекты которого запускают сетевую сессию в отдельном потоке.
+ * @author Andrey Bochkarev
+ * @version 1.0
+ */
 public class SessionThread extends Thread {
 
     private Socket socket;
@@ -21,7 +27,11 @@ public class SessionThread extends Thread {
     public static int numConnections = 0; // счётчик подключений
     public static int bites = 0; // скорость обмена (байт в секунду)
 
-
+    /**
+     * Конструктор, инициализирует объект и запускает отдельный поток для сетевой сессии
+     * @param s Сокет входящего подключения
+     * @throws IOException
+     */
     SessionThread(Socket s) throws IOException {
         socket = s;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -42,7 +52,10 @@ public class SessionThread extends Thread {
 
     }
 
-
+    /**
+     * Статичный метод возвращает очередной запрос клиентов из очереди
+     * @return Сетевой пакет
+     */
     @Nullable
     public static NetworkMessage getRequest() {
         // вынимаем из очереди запросов первый элемент и возвращаем его, удаляя из очереди
@@ -57,7 +70,10 @@ public class SessionThread extends Thread {
         }
     }
 
-
+    /**
+     * Статичный метод добавляет в очередь сетевых пакетов ответ от сервера для дальнейшей отправки клиенту
+     * @param nm Сетевой пакет
+     */
     public static void setResponse(NetworkMessage nm) {
         //вставляем в очередь ответов новый ответ сервера
         synchronized (responseQueue) {
@@ -65,6 +81,9 @@ public class SessionThread extends Thread {
         }
     }
 
+    /**
+     * Сессия обмена данными между клиентом и сервером.
+     */
     @Override
     public void run() {
         String jsonText = "";

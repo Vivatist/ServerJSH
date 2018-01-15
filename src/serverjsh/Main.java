@@ -1,16 +1,11 @@
 package serverjsh;
 
-import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-
 import serverjsh.Commands.CommandManager;
-import serverjsh.Commands.CommandPackage;
-import serverjsh.Errors.MyExceptionOfCommandPackage;
+import serverjsh.Database.Dbconnect;
+import serverjsh.Errors.MyExceptionOfNetworkMessage;
 import serverjsh.Network.*;
-
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 
 class Main {
@@ -21,43 +16,6 @@ class Main {
     private static int previousBites = 0;
 
     private static Timer myTimer = new Timer();
-
-    // Загрузка сохраненных настроек
-    private static void LoadSettings(String _settingsFilename) {
-        final Properties props = new Properties();
-        try {
-            //пытаемся прочитать настройки из файла
-            FileInputStream input = new FileInputStream(_settingsFilename);
-            props.load(input);
-            input.close();
-            PORT = Integer.parseInt(props.getProperty("PORT"));
-            DELAY_LOOP = Integer.parseInt(props.getProperty("DELAY_LOOP"));
-            System.out.println("Upload settings complete");
-        } catch (Exception ignore) {
-            //если файл не существует - создаем и записываем значения по умолчанию
-            props.setProperty("PORT", "7777");
-            props.setProperty("DELAY_LOOP", "10");
-
-            FileOutputStream output = null;
-            try {
-                output = new FileOutputStream(_settingsFilename);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            try {
-                props.store(output, "Saved settings");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                output.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            System.out.println("Making new settings file");
-            LoadSettings(_settingsFilename);
-        }
-    }
 
     private static TimerTask timerTask = new TimerTask() {
         @Override
@@ -76,22 +34,23 @@ class Main {
     };
 
 
-    public static void main(String args[]) throws InterruptedException {
+    public static void main(String args[]) throws InterruptedException, MyExceptionOfNetworkMessage {
         System.out.println("\n---------Server JSH is started----------");
 
-        String settingsFilename = "Main.ini";
-        System.out.println("Settings file: " + settingsFilename);
-        LoadSettings(settingsFilename);
+        //Загружаем настройки
+        Log.setVisibleInConsole(Boolean.parseBoolean(Settings.GetProperty("VISIBLE_LOG", "True")));
+        Log.setCOLORED(Boolean.parseBoolean(Settings.GetProperty("COLORED_LOG", "False")));
+        PORT = Integer.parseInt(Settings.GetProperty("PORT", "7777"));
+        DELAY_LOOP = Integer.parseInt(Settings.GetProperty("DELAY_LOOP", "10"));
 
-      //  myTimer.schedule(timerTask, 0, 1000);
+        //  myTimer.schedule(timerTask, 0, 1000);
 
         //Запускаем поток ожидающий запросы от клиентов
         Thread t = new Thread(new WaitingForConnectThread(PORT));
         t.start();
 
-
-
-
+        Log.out("str");
+        Dbconnect.CreateDB();
 
 
 //------------------------------------------------------------------------------
@@ -106,10 +65,10 @@ class Main {
 
             if (networkMessage != null) {
                 try {
-                    CommandPackage commandPackage = new CommandPackage(networkMessage.getText());
-                    String responseToTheRequest = commandManager.PerformAction(commandPackage);
+
+                    String responseToTheRequest = commandManager.PerformAction(networkMessage);
                     networkMessage.setText(responseToTheRequest);
-                    //System.out.println(responseToTheRequest);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     networkMessage.setError(true);
