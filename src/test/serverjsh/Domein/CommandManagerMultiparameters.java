@@ -1,30 +1,16 @@
-package serverjsh.Commands;
+package serverjsh.Domein;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import serverjsh.Errors.MyExceptionOfNetworkMessage;
+import serverjsh.Domein.Commands.CommandManager;
+import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.NetworkMessage;
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
-
 @RunWith(Parameterized.class)
 public class CommandManagerMultiparameters {
-
-    @Before
-    public void setUp() throws Exception {
-        cm = new CommandManager();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        cm = null;
-    }
-
-    private CommandManager cm;
 
     private NetworkMessage valueA;
     private String expected;
@@ -47,7 +33,7 @@ public class CommandManagerMultiparameters {
 
     @Test
     public void performAction() throws Exception {
-       assertEquals(expected,new CommandManager().PerformAction(valueA));
+       Assert.assertEquals(expected,new CommandManager().PerformAction(valueA).getText());
 
     }
 

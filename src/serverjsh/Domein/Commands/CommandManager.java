@@ -1,6 +1,6 @@
-package serverjsh.Commands;
+package serverjsh.Domein.Commands;
 
-import serverjsh.Errors.MyExceptionBadCommand;
+import serverjsh.Domein.Exceptions.MyExceptionBadCommand;
 import serverjsh.Network.NetworkMessage;
 
 import java.util.HashMap;
@@ -10,15 +10,21 @@ public class CommandManager {
 
     private Map<String, ICommand> commandMap = new HashMap<>();
 
+
     public CommandManager() {
         commandMap.put("info", new InfoCommand());
         commandMap.put("sql", new SqlCommand());
         commandMap.put("help", new HelpCommand());
         commandMap.put("test", new TestCommand());
+        commandMap.put("logview", new LogViewCommand());
+        commandMap.put("echo", new EchoCommand());
+        commandMap.put("settings", new SettingsCommand());
+        commandMap.put("coloredlog", new ColoredLogCommand());
+
     }
 
 
-    public String PerformAction(NetworkMessage nm) throws Exception {
+    public NetworkMessage PerformAction(NetworkMessage nm) throws Exception {
 
         String command = nm.getCommand();
         if (commandMap.containsKey(command)) {

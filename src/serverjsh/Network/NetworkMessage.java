@@ -1,12 +1,11 @@
 package serverjsh.Network;
 
 import com.google.gson.Gson;
-import serverjsh.Errors.MyExceptionOfNetworkMessage;
+import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -23,6 +22,8 @@ public class NetworkMessage {
     private String password;
     private String text;
     private Boolean error;
+    //регулярка для парсинга строки. Группы: 1.Команда 2.Параметр 3.Аргументы
+    final private String mRegexp = "(^[a-zA-Z][a-zA-Z0-9_]*)|(?<=-\\s{0,2})([a-zA-Z0-9_]+)|(?<=\\(\\s{0,3})(.*)(?=\\s{0,3}\\))";
 
 
     public void setText(String text) throws MyExceptionOfNetworkMessage {
@@ -32,7 +33,9 @@ public class NetworkMessage {
         if (text.trim().length() == 0) {
             throw new MyExceptionOfNetworkMessage("ERROR: An attempt to pass an empty string", 2);
         }
+
         this.text = text.trim();
+
     }
 
     public void setError(Boolean error) {
@@ -86,7 +89,7 @@ public class NetworkMessage {
      * @param jsonText Текст в формате JSON
      */
     public NetworkMessage(String jsonText) throws MyExceptionOfNetworkMessage {
-        fromJSON(jsonText);
+        fromJson(jsonText);
     }
 
 
@@ -96,7 +99,7 @@ public class NetworkMessage {
      * @param login    Логин юзера
      * @param password Пароль юзера
      * @param text     Пересылаемый текст
-     * @param error    Признак ошибки. True - ошибка
+     * @param error   Признак ошибки. True - ошибка
      */
     public NetworkMessage(String login, String password, String text, Boolean error) throws MyExceptionOfNetworkMessage {
         setId(UUID.randomUUID().toString());
@@ -107,16 +110,14 @@ public class NetworkMessage {
     }
 
 
-
     /**
      * Сериализует объект в формат JSON
      *
      * @return возвращает текст в формате JSON
      */
-    public String toJSON() {
+    public String toJson() {
         Gson gson = new Gson(); // Or use new GsonBuilder().create();
-        String jsonText = gson.toJson(this);
-        return jsonText;
+        return gson.toJson(this);
     }
 
     /**
@@ -124,7 +125,7 @@ public class NetworkMessage {
      *
      * @param jsonText Текст в формате JSON
      */
-    public void fromJSON(String jsonText) throws MyExceptionOfNetworkMessage {
+    public void fromJson(String jsonText) throws MyExceptionOfNetworkMessage {
         Gson gson = new Gson();
         setId(gson.fromJson(jsonText, NetworkMessage.class).id);
         setLogin(gson.fromJson(jsonText, NetworkMessage.class).login);
@@ -134,51 +135,53 @@ public class NetworkMessage {
     }
 
 
-    /**
-     * Извлекает список аргументов (разделенных знаком "-") из текста сетевого пакета
-     *
-     * @return Список, содержащий аргументы
-     * @throws MyExceptionOfNetworkMessage
-     */
-    public List<String> getArguments() throws MyExceptionOfNetworkMessage {
-        if (text == null) {
-            throw new MyExceptionOfNetworkMessage("ERROR: An attempt to create arguments list from an NULL string", 8);
-        }
-        if (text.trim().length() == 0) {
-            throw new MyExceptionOfNetworkMessage("ERROR: An attempt to create arguments list from an empty string", 9);
-        }
-        List<String> arguments = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(text, "-");
-        while (tokenizer.hasMoreTokens()) {
-            String result = tokenizer.nextToken();
-            if (result.trim().length() != 0)
-                arguments.add(result.trim());
-        }
-        arguments.remove(0);
-        return arguments;
-    }
+
 
     /**
      * Извлекает имя команды из текста сетевого пакета
      *
      * @return Имя команды
-     * @throws MyExceptionOfNetworkMessage
+     *
      */
-    public String getCommand() throws MyExceptionOfNetworkMessage {
-        if (text == null) {
-            throw new MyExceptionOfNetworkMessage("ERROR: An attempt to create a command list from an NULL string", 10);
+    public String getCommand() {
+        Pattern pattern = Pattern.compile(mRegexp);
+        Matcher matcher = pattern.matcher(text);
+
+        while (matcher.find()) {
+            if (matcher.group(1) != null)
+                return matcher.group(1).toLowerCase().trim();
         }
-        if (text.trim().length() == 0) {
-            throw new MyExceptionOfNetworkMessage("ERROR: An attempt to create a command from an empty string", 11);
-        }
-        List<String> arguments = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(text, "-");
-        while (tokenizer.hasMoreTokens()) {
-            String result = tokenizer.nextToken();
-            if (result.trim().length() != 0)
-                arguments.add(result.trim());
-        }
-        return arguments.get(0).toLowerCase();
+        return null;
     }
+
+    /**
+     * Извлекает список аргументов (разделенных знаком "-") из текста сетевого пакета
+     *
+     * @return Список, содержащий аргументы
+     */
+    public String getParameter() {
+
+        Pattern pattern = Pattern.compile(mRegexp);
+        Matcher matcher = pattern.matcher(text);
+
+        while (matcher.find()) {
+            if (matcher.group(2) != null)
+                return matcher.group(2).toLowerCase().trim();
+        }
+        return null;
+    }
+
+    public String getArguments() {
+        Pattern pattern = Pattern.compile(mRegexp);
+        Matcher matcher = pattern.matcher(text);
+
+        while (matcher.find()) {
+            if (matcher.group(3) != null)
+                return matcher.group(3).trim();
+        }
+        return null;
+    }
+
+
 }
 

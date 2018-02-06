@@ -2,6 +2,7 @@ package serverjsh.Network;
 
 import com.google.gson.JsonSyntaxException;
 import org.jetbrains.annotations.Nullable;
+import serverjsh.Services.Log;
 
 import java.io.*;
 import java.net.*;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Класс, объекты которого запускают сетевую сессию в отдельном потоке.
+ *
  * @author Andrey Bochkarev
  * @version 1.0
  */
@@ -20,17 +22,15 @@ public class SessionThread extends Thread {
     private BufferedReader in;
     private PrintWriter out;
     //общая для всех потоков очередь Запросов
-    public static Map<String, NetworkMessage> responseQueue = new ConcurrentHashMap();
+    private static final Map<String, NetworkMessage> responseQueue = new ConcurrentHashMap();
     //общая для всех запросов очередь Ответов
-    public static Map<String, NetworkMessage> requestQueue = new ConcurrentHashMap();
-    public static int numERRORS = 0; //счетчик ошибок
-    public static int numConnections = 0; // счётчик подключений
-    public static int bites = 0; // скорость обмена (байт в секунду)
+    private static final Map<String, NetworkMessage> requestQueue = new ConcurrentHashMap();
+
 
     /**
      * Конструктор, инициализирует объект и запускает отдельный поток для сетевой сессии
+     *
      * @param s Сокет входящего подключения
-     * @throws IOException
      */
     SessionThread(Socket s) throws IOException {
         socket = s;
@@ -38,22 +38,14 @@ public class SessionThread extends Thread {
         // Включаем автоматическое выталкивание:
         out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
                 .getOutputStream())), true);
-        // Если любой из вышеприведенных вызовов приведет к
-        // возникновению исключения, то вызывающий отвечает за
-        // закрытие сокета. В противном случае, нить
-        // закроет его.
 
-        numConnections++;
-
-        //запускаем таймер для подсчета скорости обмена
-
-
-        this.start();// вызываем run()
+        this.start();// запускаем поток (вызываем run())
 
     }
 
     /**
      * Статичный метод возвращает очередной запрос клиентов из очереди
+     *
      * @return Сетевой пакет
      */
     @Nullable
@@ -70,8 +62,10 @@ public class SessionThread extends Thread {
         }
     }
 
+
     /**
      * Статичный метод добавляет в очередь сетевых пакетов ответ от сервера для дальнейшей отправки клиенту
+     *
      * @param nm Сетевой пакет
      */
     public static void setResponse(NetworkMessage nm) {
@@ -90,16 +84,21 @@ public class SessionThread extends Thread {
         try {
             while (true) {
                 jsonText = in.readLine();
-                bites = bites + jsonText.length();
 
-                if (jsonText.equals("END")) {
+                if (jsonText == null) { //Если достигли конца потока - выходим
+                    break;
+                }
+
+
+                Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Client sent " + jsonText, 3);
+                if (jsonText.equals("END")) { // Если клиент прислал END - выходим
                     break;
                 }
 
                 //Обрабатываем принятую строку
                 NetworkMessage nm = new NetworkMessage(jsonText);
                 String id = nm.getId();
-
+                String text = nm.getText(); //извлекаем текст запроса
 
 
                 //добавляем новый запрос в очередь запросов
@@ -117,29 +116,26 @@ public class SessionThread extends Thread {
                     }
                 } while (!_flag);
 
-                //      str = np.getClientRequest() + "->" + np.getServerResponse();
-                //      System.out.println("Echoing: " + str);
-                bites = bites + nm.toJSON().length();
-                out.println(nm.toJSON());
+                text += " -> " + nm.getText();
+                Log.out(socket.getInetAddress() + ":" + socket.getPort() + " " + text, 3);
+
+                out.println(nm.toJson());
             }
-            System.out.println("closing...");
-        }
-
-        catch (JsonSyntaxException e ){
-            System.err.println("IO Exception " + e);
-            System.err.println(jsonText);
-
-        }catch (SocketException e) {
-            System.out.println("Connection reset");
+            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Closing connect", 1);
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " JSON error, jsonText [" +jsonText + "] "+ e.toString(), 1);
+        } catch (SocketException e) {
+            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Connection reset", 1);
+            e.printStackTrace();
         } catch (Exception e) {
-            numERRORS++;
-            System.err.println("IO Exception " + e);
+            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Error: " +e.toString(), 1);
+            e.printStackTrace();
         } finally {
             try {
                 socket.close();
             } catch (IOException e) {
-                numERRORS++;
-                System.err.println("Socket not closed");
+                Log.out("Socket not closed " + socket.getInetAddress() + ":" + socket.getPort(), 1);
             }
         }
     }

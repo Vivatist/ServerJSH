@@ -1,19 +1,20 @@
-package serverjsh.Commands;
+package serverjsh.Domein.Commands;
 
 
+import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.NetworkMessage;
 
 public class HelpCommand implements ICommand {
 
     @Override
-    public String Execute(NetworkMessage nm) {
+    public NetworkMessage Execute(NetworkMessage nm) throws MyExceptionOfNetworkMessage {
 
-        String helpText;
-        helpText =
+        String text;
+        text =
                 "Команды можно вводить в любом регистре, сервер одинаково\n" +
                         "обработает команду help и HeLp. Некоторве команды\n" +
-                        "поддерживают аргументы. Перед каждым аргументом необходимо\n" +
-                        "добавить знак '-' (минус). Для отключения от сервера введите 'END'\n" +
+                        "поддерживают аргументы. Аргументы записываются в скобках\n +" +
+                        "через запятую. Для отключения от сервера введите 'END'\n" +
                         "заглавными буквами.\n\n" +
 
                         "Список доступных команд:\n\n" +
@@ -29,7 +30,7 @@ public class HelpCommand implements ICommand {
                         "   -on         - цветной лог (не для всех терминалов!)\n" +
                         "   -off        - одноцветный лог\n\n" +
 
-                        "VisibleLog     - задает отображение лога на сервере\n" +
+                        "LogView        - задает отображение лога на сервере\n" +
                         "   -on         - логи выводятся в консоль\n" +
                         "   -off        - логи не отображаются\n\n" +
 
@@ -39,7 +40,8 @@ public class HelpCommand implements ICommand {
                         "               значние [имя] с параметром [параметр]\n\n"
         ;
 
+        nm.setText(text);
+        return nm;
 
-        return helpText;
     }
 }
