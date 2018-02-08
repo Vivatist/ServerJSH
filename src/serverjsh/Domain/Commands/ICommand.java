@@ -1,7 +1,7 @@
-package serverjsh.Domein.Commands;
+package serverjsh.Domain.Commands;
 
 
-import serverjsh.Domein.Exceptions.MyExceptionBadCommand;
+import serverjsh.Domain.Exceptions.MyExceptionBadCommand;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.NetworkMessage;
 

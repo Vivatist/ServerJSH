@@ -48,26 +48,4 @@ public class Base {
     }
 
 
-
-    public void CreateDB() {
-
-        try {
-
-
-            Connection conn = DriverManager.getConnection("jdbc:h2:./jsh_DB", "pi", "238938");
-
-            Statement st = conn.createStatement();
-
-            st.execute(" CREATE TABLE Student (Code INTEGER NOT NULL, Name CHAR (30) NOT NULL , Address CHAR (50),Mark DECIMAL)");
-
-            System.out.println("Table create successfully...");
-
-        } catch (SQLException e) {
-
-            e.printStackTrace();
-
-        }
-
-    }
-
 }

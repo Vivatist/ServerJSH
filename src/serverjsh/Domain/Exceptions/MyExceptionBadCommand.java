@@ -1,4 +1,4 @@
-package serverjsh.Domein.Exceptions;
+package serverjsh.Domain.Exceptions;
 
 public class MyExceptionBadCommand extends Exception {
 

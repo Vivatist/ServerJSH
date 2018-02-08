@@ -1,6 +1,6 @@
 package serverjsh;
 
-import serverjsh.Domein.Commands.CommandManager;
+import serverjsh.Domain.Commands.CommandManager;
 import serverjsh.DAO.Base;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.*;

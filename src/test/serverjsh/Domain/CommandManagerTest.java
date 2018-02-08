@@ -1,9 +1,9 @@
-package serverjsh.Domein;
+package serverjsh.Domain;
 
 import org.junit.Assert;
 import org.junit.Test;
-import serverjsh.Domein.Commands.CommandManager;
-import serverjsh.Domein.Exceptions.MyExceptionBadCommand;
+import serverjsh.Domain.Commands.CommandManager;
+import serverjsh.Domain.Exceptions.MyExceptionBadCommand;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.NetworkMessage;
 

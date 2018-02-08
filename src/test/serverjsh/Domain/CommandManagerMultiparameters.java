@@ -1,10 +1,10 @@
-package serverjsh.Domein;
+package serverjsh.Domain;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import serverjsh.Domein.Commands.CommandManager;
+import serverjsh.Domain.Commands.CommandManager;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.NetworkMessage;
 import java.util.Arrays;

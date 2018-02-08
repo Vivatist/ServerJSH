@@ -1,8 +1,8 @@
-package serverjsh.Domein.Commands;
+package serverjsh.Domain.Commands;
 
 
 import serverjsh.DAO.Base;
-import serverjsh.Domein.Exceptions.MyExceptionBadCommand;
+import serverjsh.Domain.Exceptions.MyExceptionBadCommand;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Services.Log;
 import serverjsh.Network.NetworkMessage;

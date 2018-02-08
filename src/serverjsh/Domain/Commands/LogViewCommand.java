@@ -1,4 +1,4 @@
-package serverjsh.Domein.Commands;
+package serverjsh.Domain.Commands;
 
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Services.Log;
