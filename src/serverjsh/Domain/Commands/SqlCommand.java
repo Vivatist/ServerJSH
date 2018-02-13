@@ -1,17 +1,22 @@
 package serverjsh.Domain.Commands;
 
-
-import serverjsh.DAO.Base;
+import org.apache.log4j.Logger;
+import serverjsh.DAO.Service.BasicSql;
+import serverjsh.DAO.Entity.User;
+import serverjsh.DAO.Service.UserService;
 import serverjsh.Domain.Exceptions.MyExceptionBadCommand;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
-import serverjsh.Services.Log;
 import serverjsh.Network.NetworkMessage;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
+
 
 public class SqlCommand implements ICommand {
+
+    private BasicSql basicSql = new BasicSql();
+
+    private static final Logger log = Logger.getLogger(SqlCommand.class);
 
     @Override
     public NetworkMessage Execute(NetworkMessage nm) throws MyExceptionBadCommand, MyExceptionOfNetworkMessage, SQLException {
@@ -32,181 +37,92 @@ public class SqlCommand implements ICommand {
         if (parameter != null) {
             switch (parameter) {
 
-                case "execute": {
-                    Log.out("SQL запрос: " + nm.getArguments(), 2);
-                    try {
-                        Base.Execute(nm.getArguments());
-                        text = "Запрос выполнен";
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
+                case "exec": {
+                    text = "";
+                    log.debug("SQL запрос: " + nm.getArguments());
+                    List<String> resultList = basicSql.Exec(nm.getArguments());
+                    for (String line : resultList) {
+                        text += "\n" + line;
                     }
                     break;
                 }
 
+                case "test": {
+                    User user = new User();
+                    UserService userService = new UserService();
 
-                case "executequery": {
-                    ResultSet rs = null;
-                    Log.out("SQL запрос: " + nm.getArguments(), 2);
-                    try {
-                        rs = Base.ExecuteQuery(nm.getArguments());
-                        text = "";
-                        // Количество колонок в результирующем запросе
-                        int columns = rs.getMetaData().getColumnCount();
-                        // Перебор строк с данными
-                        while (rs.next()) {
-                            for (int i = 1; i <= columns; i++) {
-                                text += (rs.getString(i) + "\t");
-                            }
-                            text += "\n";
+                    for (int i = 0; i < 10; i++) {
+                        user.setId(i);
+                        user.setLogin("Admin");
+                        user.setPassword("238938");
+                        user.setGroupId(100);
+                        userService.add(user);
+                    }
+
+
+                    text = "";
+                    List<String> lineList = basicSql.Exec("SELECT * FROM users");
+                    for (String line : lineList) {
+                        text += "\n" + line;
+                    }
+                    text += "\n";
+                    break;
+                }
+
+                case "testdel": {
+                    User user = new User();
+                    UserService userService = new UserService();
+
+                    int i = ((int)(Math.random() * 11));
+
+                    user.setId(i);
+                    user.setLogin("Admin");
+                    user.setPassword("238938");
+                    user.setGroupId(100);
+                    userService.remove(user);
+
+                    text = "";
+                    List<String> lineList = basicSql.Exec("SELECT * FROM users");
+                    for (String line : lineList) {
+                        text += "\n" + line;
+                    }
+                    text += "\n";
+                    break;
+                }
+
+                case "show": {
+                    text = "";
+                    List<String> tablesList = basicSql.Exec("SHOW TABLES");
+                    for (String table : tablesList) {
+                        text += "\n" + table;
+                        text += "\n--------------------";
+                        List<String> columnList = basicSql.Exec("SHOW COLUMNS FROM " + table.split("\t")[0]);
+                        for (String column : columnList) {
+                            text += "\n" + column;
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
-                    } finally {
-                        if (rs != null) {
-                            rs.close();
-                        }
+                        text += "\n";
                     }
                     break;
                 }
 
+                case "showall": {
+                    text = "";
+                    List<String> tablesList = basicSql.Exec("SHOW TABLES");
+                    for (String table : tablesList) {
+                        text += "\n" + table;
+                        text += "\n--------------------";
+                        List<String> columnList = basicSql.Exec("SHOW COLUMNS FROM " + table.split("\t")[0]);
+                        for (String column : columnList) {
+                            text += "\n" + column;
+                        }
+                        text += "\n";
 
-                case "show": { // выводит структуру базы
-                    ResultSet resultSet = null;
-                    ArrayList<String> tables = new ArrayList<>();
-                    try {
-                        resultSet = Base.ExecuteQuery("SHOW TABLES");
-                        text = "\n";
-                        // Перебор строк с данными
-                        while (resultSet.next()) {
-                            tables.add(resultSet.getString(1));
+                        List<String> lineList = basicSql.Exec("SELECT * FROM " + table.split("\t")[0]);
+                        for (String line : lineList) {
+                            text += "\n" + line;
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
-                    } finally {
-                        if (resultSet != null) {
-                            resultSet.close();
-                        }
+                        text += "\n";
                     }
-                    try {
-                        for (String table : tables) {
-                            text += table +
-                                    "\n----------------------------------------\n";
-                            resultSet = Base.ExecuteQuery("SHOW COLUMNS FROM " + table);
-                            // Количество колонок в результирующем запросе
-                            int columns = resultSet.getMetaData().getColumnCount();
-                            // Перебор строк с данными
-                            int num = 1;
-                            while (resultSet.next()) {
-                                text += num + ".\t";
-                                for (int i = 1; i <= columns; i++) {
-                                    text += (resultSet.getString(i) + "\t");
-                                }
-                                text += "\n";
-                                num++;
-                            }
-                            text += "\n";
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
-                    } finally {
-                        if (resultSet != null) {
-                            resultSet.close();
-                        }
-                    }
-                    break;
-                }
-
-
-                case "showall": { // выводит структуру базы
-                    ResultSet resultSet = null;
-                    ArrayList<String> tables = new ArrayList<>();
-                    try {
-                        resultSet = Base.ExecuteQuery("SHOW TABLES");
-                        text = "\n";
-                        // Перебор строк с данными
-                        while (resultSet.next()) {
-                            tables.add(resultSet.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
-                    } finally {
-                        if (resultSet != null) {
-                            resultSet.close();
-                        }
-                    }
-                    try {
-                        for (String table : tables) {
-                            text += table +
-                                    "\n----------------------------------------\n";
-                            resultSet = Base.ExecuteQuery("SHOW COLUMNS FROM " + table);
-                            // Количество колонок в результирующем запросе
-                            int columns = resultSet.getMetaData().getColumnCount();
-                            // Перебор строк с данными
-                            int num = 1;
-                            while (resultSet.next()) {
-                                text += num + ".\t";
-                                for (int i = 1; i <= columns; i++) {
-                                    text += (resultSet.getString(i) + "\t");
-                                }
-                                text += "\n";
-                                num++;
-                            }
-                            text += "\n";
-
-                            try {
-                                resultSet = Base.ExecuteQuery("SELECT * FROM " + table);
-                                // Количество колонок в результирующем запросе
-                                columns = resultSet.getMetaData().getColumnCount();
-                                // Перебор строк с данными
-                                int numLine = 1;
-                                while (resultSet.next()) {
-                                    text += numLine + ".\t";
-                                    for (int i = 1; i <= columns; i++) {
-                                        text += (resultSet.getString(i) + "\t");
-                                    }
-                                    text += "\n";
-                                    numLine++;
-                                }
-                                text += "\n";
-
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                                Log.out(e.toString(), 1);
-                                text += e.toString();
-                                nm.setError(true);
-                            } finally {
-                                if (resultSet != null) {
-                                    resultSet.close();
-                                }
-                            }
-
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(), 1);
-                        text += e.toString();
-                        nm.setError(true);
-                    } finally {
-                        if (resultSet != null) {
-                            resultSet.close();
-                        }
-                    }
-
                     break;
                 }
 

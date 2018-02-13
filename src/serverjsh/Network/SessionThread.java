@@ -2,8 +2,7 @@ package serverjsh.Network;
 
 import com.google.gson.JsonSyntaxException;
 import org.jetbrains.annotations.Nullable;
-import serverjsh.Services.Log;
-
+import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -26,6 +25,7 @@ public class SessionThread extends Thread {
     //общая для всех запросов очередь Ответов
     private static final Map<String, NetworkMessage> requestQueue = new ConcurrentHashMap();
 
+    private static final Logger log = Logger.getLogger(SessionThread.class);
 
     /**
      * Конструктор, инициализирует объект и запускает отдельный поток для сетевой сессии
@@ -33,6 +33,7 @@ public class SessionThread extends Thread {
      * @param s Сокет входящего подключения
      */
     SessionThread(Socket s) throws IOException {
+        log.debug("Session thread is started");
         socket = s;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         // Включаем автоматическое выталкивание:
@@ -79,7 +80,7 @@ public class SessionThread extends Thread {
      * Сессия обмена данными между клиентом и сервером.
      */
     @Override
-    public void run() {
+    public void run() {  //TODO разобраться с закрытием потоков
         String jsonText = "";
         try {
             while (true) {
@@ -90,7 +91,7 @@ public class SessionThread extends Thread {
                 }
 
 
-                Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Client sent " + jsonText, 3);
+                log.debug(socket.getInetAddress() + ":" + socket.getPort() + " Client sent " + jsonText);
                 if (jsonText.equals("END")) { // Если клиент прислал END - выходим
                     break;
                 }
@@ -117,25 +118,22 @@ public class SessionThread extends Thread {
                 } while (!_flag);
 
                 text += " -> " + nm.getText();
-                Log.out(socket.getInetAddress() + ":" + socket.getPort() + " " + text, 3);
+                log.info(socket.getInetAddress() + ":" + socket.getPort() + " " + text);
 
                 out.println(nm.toJson());
             }
-            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Closing connect", 1);
+            log.info(socket.getInetAddress() + ":" + socket.getPort() + " Closing connect");
         } catch (JsonSyntaxException e) {
-            e.printStackTrace();
-            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " JSON error, jsonText [" +jsonText + "] "+ e.toString(), 1);
+            log.error(socket.getInetAddress() + ":" + socket.getPort() + " JSON error, jsonText [" +jsonText + "] ", e);
         } catch (SocketException e) {
-            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Connection reset", 1);
-            e.printStackTrace();
+            log.debug(socket.getInetAddress() + ":" + socket.getPort() + " Connection reset");
         } catch (Exception e) {
-            Log.out(socket.getInetAddress() + ":" + socket.getPort() + " Error: " +e.toString(), 1);
-            e.printStackTrace();
+            log.error(socket.getInetAddress() + ":" + socket.getPort(), e);
         } finally {
             try {
                 socket.close();
             } catch (IOException e) {
-                Log.out("Socket not closed " + socket.getInetAddress() + ":" + socket.getPort(), 1);
+                log.error("Socket not closed " + socket.getInetAddress() + ":" + socket.getPort(), e);
             }
         }
     }

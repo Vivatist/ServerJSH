@@ -1,13 +1,15 @@
 package serverjsh.Domain.Commands;
 
+import org.apache.log4j.Logger;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
-import serverjsh.Services.Log;
 import serverjsh.Network.NetworkMessage;
 import serverjsh.Services.Settings;
 
 import java.io.*;
 
 public class SettingsCommand implements ICommand {
+
+    private static final Logger log = Logger.getLogger(SettingsCommand.class);
 
     @Override
     public NetworkMessage Execute(NetworkMessage nm) throws MyExceptionOfNetworkMessage {
@@ -36,8 +38,7 @@ public class SettingsCommand implements ICommand {
                             line = reader.readLine();
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.out(e.toString(),1);
+                        log.error(e);
                         text.append(e.toString());
                         nm.setError(true);
                     }

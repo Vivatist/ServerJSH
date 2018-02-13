@@ -1,6 +1,7 @@
 package serverjsh.DAO.Entity;
 
 import java.util.Objects;
+import org.apache.log4j.Logger;
 
 public class User {
 

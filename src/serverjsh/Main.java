@@ -1,10 +1,9 @@
 package serverjsh;
 
+import org.apache.log4j.Logger;
 import serverjsh.Domain.Commands.CommandManager;
-import serverjsh.DAO.Base;
 import serverjsh.Network.Exceptions.MyExceptionOfNetworkMessage;
 import serverjsh.Network.*;
-import serverjsh.Services.Log;
 import serverjsh.Services.Settings;
 
 
@@ -23,14 +22,14 @@ class Main {
 //        }
 //    };
 
+    private static final Logger log = Logger.getLogger(Main.class);
 
     public static void main(String args[]) throws InterruptedException, MyExceptionOfNetworkMessage {
-        System.out.println("\n-------------------------------------------------");
-        Log.out("Server JSH is started",1);
+        System.out.println("\n");
+        log.info("-------------------------------------------------");
+        log.info("Server JSH is started");
 
         //Загружаем настройки
-        Log.setVisibleInConsole(Integer.parseInt(Settings.GetProperty("VISIBLE_LOG", "3")));
-        Log.setColored(Boolean.parseBoolean(Settings.GetProperty("COLORED_LOG", "False")));
         int PORT = Integer.parseInt(Settings.GetProperty("PORT", "7777"));
         int DELAY_LOOP = Integer.parseInt(Settings.GetProperty("DELAY_LOOP", "10"));
 
@@ -39,9 +38,6 @@ class Main {
         //Запускаем поток ожидающий запросы от клиентов
         Thread t = new Thread(new SessionLauncher(PORT));
         t.start();
-
-        Base.Connect("jdbc:h2:./jsh_DB", "pi", "238938");
-
 
 //------------------------------------------------------------------------------
 //                          Г Л А В Н Ы Й  Ц И К Л

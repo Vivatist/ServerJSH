@@ -13,12 +13,12 @@ public interface IUser {
     //read
     List<User> getAll() throws SQLException;
 
-    User getById(int id);
+    User getById(int id) throws SQLException;
 
     //update
-    void update(User user);
+    void update(User user) throws SQLException;
 
     //delete
-    void remove(User user);
+    void remove(User user) throws SQLException;
 
 }

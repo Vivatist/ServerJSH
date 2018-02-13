@@ -5,7 +5,7 @@
  */
 package serverjsh.Network;
 
-import serverjsh.Services.Log;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -15,6 +15,8 @@ import java.net.Socket;
 public class SessionLauncher implements Runnable{
 
     private int mPort;
+
+    private static final Logger log = Logger.getLogger(SessionLauncher.class);
 
    public SessionLauncher(int port){
         this.mPort = port;
@@ -28,7 +30,7 @@ public class SessionLauncher implements Runnable{
             // привинтить сокет на локалхост
             ServerSocket server = new ServerSocket(mPort);
 
-            Log.out("Thread of accepting connect is started",2);
+            log.info("Thread of accepting connect is started");
 
             // слушаем порт
             while (true) {
@@ -43,13 +45,12 @@ public class SessionLauncher implements Runnable{
                     // в противном случае, нить закроет его:
                     socket.close();
                 }
-                Log.out(socket.getInetAddress() + ":" + socket.getPort() + " New connect", 1);
+                log.info(socket.getInetAddress() + ":" + socket.getPort() + " New connect");
             }
 
         } catch (Exception e) {
-           e.printStackTrace();
-           Log.out(e.toString(),1);
-        } // вывод исключений
+           log.error(e);
+        }
     }
     
 }

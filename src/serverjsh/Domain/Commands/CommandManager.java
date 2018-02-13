@@ -16,11 +16,8 @@ public class CommandManager {
         commandMap.put("sql", new SqlCommand());
         commandMap.put("help", new HelpCommand());
         commandMap.put("test", new TestCommand());
-        commandMap.put("logview", new LogViewCommand());
         commandMap.put("echo", new EchoCommand());
         commandMap.put("settings", new SettingsCommand());
-        commandMap.put("coloredlog", new ColoredLogCommand());
-
     }
 
 
