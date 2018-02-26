@@ -36,7 +36,7 @@ class Main {
         //  myTimer.schedule(timerTask, 0, 1000);
 
         //Запускаем поток ожидающий запросы от клиентов
-        Thread t = new Thread(new SessionLauncher(PORT));
+        Thread t = new Thread(new NewSessionLauncher(PORT));
         t.start();
 
 //------------------------------------------------------------------------------
